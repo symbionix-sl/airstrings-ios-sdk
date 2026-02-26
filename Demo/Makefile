@@ -15,9 +15,9 @@ config:
 seed:
 	bash seed.sh
 
-# Generate project and open in Xcode
+# Generate project and open workspace in Xcode
 open: project
-	open *.xcodeproj
+	open AirStringsDemo.xcworkspace
 
 # Remove generated Xcode project
 clean:

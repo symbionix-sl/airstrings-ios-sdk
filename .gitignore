@@ -1,6 +1,7 @@
 # Xcode
 *.xcodeproj
 *.xcworkspace
+!Demo/AirStringsDemo.xcworkspace
 xcuserdata/
 DerivedData/
 *.xcscmblueprint
