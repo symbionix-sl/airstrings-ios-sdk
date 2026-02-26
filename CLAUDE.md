@@ -4,6 +4,10 @@ Swift Package that fetches, verifies, caches, and exposes Ed25519-signed localiz
 
 **Platform:** iOS 17+ / macOS 14+ | **Swift:** 6.0 (strict concurrency) | **Dependency:** SmartNet (networking only)
 
+## Code Style
+
+- **Indentation:** 2 spaces (tab width: 2, indent width: 2). No tabs.
+
 ## Non-Negotiables
 
 Inherited from the parent project — these override everything else:

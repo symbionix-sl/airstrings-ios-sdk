@@ -19,6 +19,7 @@ targets:
     info:
       path: AirStringsDemo/Info.plist
       properties:
+        UILaunchScreen: {}
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
     dependencies:
