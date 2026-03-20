@@ -6,7 +6,7 @@ struct DemoApp: App {
     @State private var airStrings = AirStrings(
         configuration: AirStringsConfiguration(
             projectId: DemoConfig.projectId,
-            publicKeys: [DemoConfig.keyId: DemoConfig.publicKeyData],
+            publicKeys: [DemoConfig.publicKeyBase64],
             locale: .fixed("en"),
             baseURL: DemoConfig.baseURL
         )

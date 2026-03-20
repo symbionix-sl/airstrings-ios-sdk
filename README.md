@@ -29,9 +29,7 @@ import AirStrings
 
 AirStrings.configure(.init(
     projectId: "proj_a1b2c3d4e5f6",
-    publicKeys: [
-        "key_prod_01": Data([/* your 32-byte Ed25519 public key */])
-    ]
+    publicKeys: ["BASE64_ENCODED_PUBLIC_KEY"]
 ))
 ```
 
@@ -52,7 +50,7 @@ struct MyApp: App {
     init() {
         AirStrings.configure(.init(
             projectId: "proj_a1b2c3d4e5f6",
-            publicKeys: ["key_prod_01": publicKeyData]
+            publicKeys: ["BASE64_ENCODED_PUBLIC_KEY"]
         ))
     }
 
@@ -116,7 +114,7 @@ The SDK uses the device locale by default. Override with a fixed locale:
 ```swift
 AirStrings.configure(.init(
     projectId: "proj_a1b2c3d4e5f6",
-    publicKeys: ["key_prod_01": publicKeyData],
+    publicKeys: ["BASE64_ENCODED_PUBLIC_KEY"],
     locale: .fixed("fr")
 ))
 ```
@@ -173,7 +171,7 @@ All paths are silent on failure — views keep showing the last known strings (o
 ```swift
 AirStringsConfiguration(
     projectId: String,             // Your AirStrings project ID
-    publicKeys: [String: Data],    // key_id → 32-byte Ed25519 public key
+    publicKeys: [String],            // base64-encoded Ed25519 public keys
     locale: AirStringsLocale       // .system (default) or .fixed("en-US")
 )
 ```
@@ -193,6 +191,7 @@ AirStringsConfiguration(
 | `.signatureVerificationFailed` | Ed25519 signature doesn't match |
 | `.unsupportedFormatVersion(Int)` | Bundle format version not recognized |
 | `.invalidSignatureEncoding` | Signature isn't valid base64url or isn't 64 bytes |
+| `.invalidPublicKeyEncoding(String)` | Public key isn't valid base64 |
 | `.bundleDecodingFailed(String)` | Bundle JSON couldn't be parsed |
 
 ## Key Rotation
@@ -203,8 +202,8 @@ Configure multiple public keys to support rotation:
 AirStrings.configure(.init(
     projectId: "proj_a1b2c3d4e5f6",
     publicKeys: [
-        "key_prod_01": oldKeyData,
-        "key_prod_02": newKeyData
+        "OLD_KEY_BASE64",
+        "NEW_KEY_BASE64"
     ]
 ))
 ```
