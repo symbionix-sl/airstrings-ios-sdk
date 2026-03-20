@@ -9,7 +9,7 @@ struct AirStringsTests {
   private func makeConfig() -> AirStringsConfiguration {
     AirStringsConfiguration(
       projectId: "proj_test12345678",
-      publicKeys: [:],
+      publicKeys: [],
       locale: .fixed("en"),
       baseURL: URL(string: "https://localhost:9999")!
     )
@@ -45,7 +45,7 @@ struct AirStringsTests {
   @Test func fixedLocaleResolution() {
     let config = AirStringsConfiguration(
       projectId: "proj_test12345678",
-      publicKeys: [:],
+      publicKeys: [],
       locale: .fixed("it"),
       baseURL: URL(string: "https://localhost:9999")!
     )

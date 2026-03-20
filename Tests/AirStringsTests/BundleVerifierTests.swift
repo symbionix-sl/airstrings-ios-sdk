@@ -10,23 +10,29 @@ struct BundleVerifierTests {
     StringEntry(value: value, format: .text)
   }
 
+  private func keyBase64(_ privateKey: Curve25519.Signing.PrivateKey) -> String {
+    privateKey.publicKey.rawRepresentation.base64EncodedString()
+  }
+
   private func makeSignedBundle(
     formatVersion: Int = 1,
     projectId: String = "proj_test12345678",
     locale: String = "en",
     revision: Int = 1,
     createdAt: String = "2026-02-25T14:30:00Z",
-    keyId: String = "key_test_01",
+    keyId: String? = nil,
     strings: [String: StringEntry] = ["hello": StringEntry(value: "Hello World", format: .text)],
     privateKey: Curve25519.Signing.PrivateKey
   ) throws -> StringBundle {
+    let resolvedKeyId = keyId ?? keyBase64(privateKey)
+
     let unsigned = StringBundle(
       formatVersion: formatVersion,
       projectId: projectId,
       locale: locale,
       revision: revision,
       createdAt: createdAt,
-      keyId: keyId,
+      keyId: resolvedKeyId,
       signature: "",
       strings: strings
     )
@@ -41,7 +47,7 @@ struct BundleVerifierTests {
       locale: locale,
       revision: revision,
       createdAt: createdAt,
-      keyId: keyId,
+      keyId: resolvedKeyId,
       signature: signatureBase64url,
       strings: strings
     )
@@ -50,9 +56,7 @@ struct BundleVerifierTests {
   @Test func validSignature() throws {
     let privateKey = Curve25519.Signing.PrivateKey()
     let bundle = try makeSignedBundle(privateKey: privateKey)
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": privateKey.publicKey.rawRepresentation
-    ])
+    let verifier = BundleVerifier(publicKeys: [keyBase64(privateKey)])
 
     try verifier.verify(bundle)
   }
@@ -60,10 +64,9 @@ struct BundleVerifierTests {
   @Test func wrongSignatureThrows() throws {
     let signingKey = Curve25519.Signing.PrivateKey()
     let wrongKey = Curve25519.Signing.PrivateKey()
-    let bundle = try makeSignedBundle(privateKey: signingKey)
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": wrongKey.publicKey.rawRepresentation
-    ])
+    // Bundle signed with signingKey but keyId set to wrongKey's base64
+    let bundle = try makeSignedBundle(keyId: keyBase64(wrongKey), privateKey: signingKey)
+    let verifier = BundleVerifier(publicKeys: [keyBase64(wrongKey)])
 
     let error = #expect(throws: AirStringsError.self) {
       try verifier.verify(bundle)
@@ -76,27 +79,24 @@ struct BundleVerifierTests {
 
   @Test func unknownKeyIdThrows() throws {
     let privateKey = Curve25519.Signing.PrivateKey()
-    let bundle = try makeSignedBundle(keyId: "key_unknown_99", privateKey: privateKey)
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": privateKey.publicKey.rawRepresentation
-    ])
+    let otherKey = Curve25519.Signing.PrivateKey()
+    // Bundle's keyId is privateKey's base64, but verifier only knows otherKey
+    let bundle = try makeSignedBundle(privateKey: privateKey)
+    let verifier = BundleVerifier(publicKeys: [keyBase64(otherKey)])
 
     let error = #expect(throws: AirStringsError.self) {
       try verifier.verify(bundle)
     }
-    guard case .unknownKeyId(let keyId) = error else {
+    guard case .unknownKeyId = error else {
       Issue.record("Expected unknownKeyId, got \(String(describing: error))")
       return
     }
-    #expect(keyId == "key_unknown_99")
   }
 
   @Test func unsupportedFormatVersionThrows() throws {
     let privateKey = Curve25519.Signing.PrivateKey()
     let bundle = try makeSignedBundle(formatVersion: 99, privateKey: privateKey)
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": privateKey.publicKey.rawRepresentation
-    ])
+    let verifier = BundleVerifier(publicKeys: [keyBase64(privateKey)])
 
     let error = #expect(throws: AirStringsError.self) {
       try verifier.verify(bundle)
@@ -109,21 +109,19 @@ struct BundleVerifierTests {
   }
 
   @Test func invalidSignatureEncodingThrows() {
+    let privateKey = Curve25519.Signing.PrivateKey()
     let bundle = StringBundle(
       formatVersion: 1,
       projectId: "proj_test12345678",
       locale: "en",
       revision: 1,
       createdAt: "2026-02-25T14:30:00Z",
-      keyId: "key_test_01",
+      keyId: keyBase64(privateKey),
       signature: "not-valid-base64url-!!@@##",
       strings: ["hello": textEntry("Hello")]
     )
 
-    let privateKey = Curve25519.Signing.PrivateKey()
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": privateKey.publicKey.rawRepresentation
-    ])
+    let verifier = BundleVerifier(publicKeys: [keyBase64(privateKey)])
 
     #expect(throws: AirStringsError.self) {
       try verifier.verify(bundle)
@@ -141,9 +139,7 @@ struct BundleVerifierTests {
       privateKey: privateKey
     )
 
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": privateKey.publicKey.rawRepresentation
-    ])
+    let verifier = BundleVerifier(publicKeys: [keyBase64(privateKey)])
 
     try verifier.verify(bundle)
   }
@@ -166,9 +162,7 @@ struct BundleVerifierTests {
       strings: ["key": textEntry("tampered")]
     )
 
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": privateKey.publicKey.rawRepresentation
-    ])
+    let verifier = BundleVerifier(publicKeys: [keyBase64(privateKey)])
 
     let error = #expect(throws: AirStringsError.self) {
       try verifier.verify(tampered)
@@ -189,9 +183,7 @@ struct BundleVerifierTests {
       privateKey: privateKey
     )
 
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": privateKey.publicKey.rawRepresentation
-    ])
+    let verifier = BundleVerifier(publicKeys: [keyBase64(privateKey)])
 
     try verifier.verify(bundle)
   }
@@ -215,9 +207,7 @@ struct BundleVerifierTests {
       strings: ["key": StringEntry(value: "Hello", format: .icu)]
     )
 
-    let verifier = BundleVerifier(publicKeys: [
-      "key_test_01": privateKey.publicKey.rawRepresentation
-    ])
+    let verifier = BundleVerifier(publicKeys: [keyBase64(privateKey)])
 
     #expect(throws: AirStringsError.self) {
       try verifier.verify(tampered)

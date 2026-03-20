@@ -2,18 +2,22 @@ import CryptoKit
 import Foundation
 
 struct BundleVerifier: Sendable {
-    let publicKeys: [String: Data]
+    let publicKeys: [String]
 
     /// Verifies a bundle's Ed25519 signature per the AirStrings contract.
     ///
     /// Verification order (per contract):
-    /// 1. Look up key_id → unknown key = hard error
+    /// 1. Look up key_id (base64 public key) → unknown key = hard error
     /// 2. Build canonical signed content
     /// 3. Verify Ed25519 signature → failure = hard error
     /// 4. Check format_version → unknown version = hard error
     func verify(_ bundle: StringBundle) throws {
-        guard let keyData = publicKeys[bundle.keyId] else {
+        guard publicKeys.contains(bundle.keyId) else {
             throw AirStringsError.unknownKeyId(bundle.keyId)
+        }
+
+        guard let keyData = Data(base64Encoded: bundle.keyId) else {
+            throw AirStringsError.invalidPublicKeyEncoding(bundle.keyId)
         }
 
         let publicKey = try Curve25519.Signing.PublicKey(rawRepresentation: keyData)

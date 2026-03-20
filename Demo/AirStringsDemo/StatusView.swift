@@ -25,7 +25,6 @@ struct StatusView: View {
 
         Section("Configuration") {
           row("Project", value: DemoConfig.projectId)
-          row("Key ID", value: DemoConfig.keyId)
           row("Base URL", value: DemoConfig.baseURL.absoluteString)
         }
 

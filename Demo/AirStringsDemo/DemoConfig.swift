@@ -11,9 +11,6 @@ enum DemoConfig {
     /// Locales seeded by seed.sh.
     static let availableLocales = ["en", "fr", "es"]
 
-    /// Key ID matching the signing key registered in the DB.
-    static let keyId = "key_dev_01"
-
     /// Backend API URL (used by seed.sh, not the SDK).
     static let serverURL = "http://localhost:8080"
 }

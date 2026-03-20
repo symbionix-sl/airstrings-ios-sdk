@@ -2,13 +2,13 @@ import Foundation
 
 public struct AirStringsConfiguration: Sendable {
     public let projectId: String
-    public let publicKeys: [String: Data]
+    public let publicKeys: [String]
     public let locale: AirStringsLocale
     let baseURL: URL
 
     public init(
         projectId: String,
-        publicKeys: [String: Data],
+        publicKeys: [String],
         locale: AirStringsLocale = .system
     ) {
         self.projectId = projectId
@@ -20,7 +20,7 @@ public struct AirStringsConfiguration: Sendable {
     /// Internal initializer for testing and local development.
     init(
         projectId: String,
-        publicKeys: [String: Data],
+        publicKeys: [String],
         locale: AirStringsLocale = .system,
         baseURL: URL
     ) {
@@ -32,7 +32,7 @@ public struct AirStringsConfiguration: Sendable {
 
     static let placeholder = AirStringsConfiguration(
         projectId: "",
-        publicKeys: [:],
+        publicKeys: [],
         locale: .fixed("en"),
         baseURL: URL(string: "https://localhost")!
     )

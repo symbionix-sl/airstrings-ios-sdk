@@ -4,4 +4,5 @@ public enum AirStringsError: Error, Sendable {
     case unsupportedFormatVersion(Int)
     case bundleDecodingFailed(String)
     case invalidSignatureEncoding
+    case invalidPublicKeyEncoding(String)
 }

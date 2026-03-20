@@ -200,7 +200,7 @@ public final class AirStrings {
     self.isPlaceholder = true
     self.configuration = .placeholder
     self.fetcher = BundleFetcher(baseURL: URL(string: "https://localhost")!)
-    self.verifier = BundleVerifier(publicKeys: [:])
+    self.verifier = BundleVerifier(publicKeys: [])
     self.store = BundleStore()
   }
 
