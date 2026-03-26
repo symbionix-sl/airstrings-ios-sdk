@@ -113,7 +113,7 @@ public final class AirStrings {
     currentLocale = bcp47
 
     // Try loading cached bundle for new locale
-    if let cached = store.load(projectId: configuration.projectId, locale: bcp47) {
+    if let cached = store.load(projectId: configuration.projectId, environmentId: configuration.environmentId, locale: bcp47) {
       if let bundle = decodeBundle(from: cached.data) {
         do {
           try verifier.verify(bundle)
@@ -121,7 +121,7 @@ public final class AirStrings {
           cachedETags[bcp47] = cached.etag
         } catch {
           logger.error("Cached bundle verification failed for \(bcp47), clearing cache")
-          store.delete(projectId: configuration.projectId, locale: bcp47)
+          store.delete(projectId: configuration.projectId, environmentId: configuration.environmentId, locale: bcp47)
           clearBundle()
         }
       }
@@ -156,7 +156,9 @@ public final class AirStrings {
 
     do {
       let result = try await fetcher.fetch(
+        organizationId: configuration.organizationId,
         projectId: configuration.projectId,
+        environmentId: configuration.environmentId,
         locale: locale,
         ifNoneMatch: cachedETags[locale]
       )
@@ -182,7 +184,7 @@ public final class AirStrings {
           return
         }
 
-        store.save(data, projectId: configuration.projectId, locale: locale, etag: etag)
+        store.save(data, projectId: configuration.projectId, environmentId: configuration.environmentId, locale: locale, etag: etag)
         cachedETags[locale] = etag
 
         // Only apply if locale hasn't changed during fetch
@@ -196,7 +198,7 @@ public final class AirStrings {
       logger.error("Fetch failed for \(locale): \(error)")
       if !isReady {
         // If we have a cached bundle, mark as ready
-        if store.load(projectId: configuration.projectId, locale: locale) != nil {
+        if store.load(projectId: configuration.projectId, environmentId: configuration.environmentId, locale: locale) != nil {
           isReady = true
         }
         // else: no cache + no network → isReady stays false, keys return as fallback
@@ -235,12 +237,12 @@ public final class AirStrings {
   }
 
   private func loadCachedBundle() {
-    guard let cached = store.load(projectId: configuration.projectId, locale: currentLocale) else {
+    guard let cached = store.load(projectId: configuration.projectId, environmentId: configuration.environmentId, locale: currentLocale) else {
       return
     }
 
     guard let bundle = decodeBundle(from: cached.data) else {
-      store.delete(projectId: configuration.projectId, locale: currentLocale)
+      store.delete(projectId: configuration.projectId, environmentId: configuration.environmentId, locale: currentLocale)
       return
     }
 
@@ -251,7 +253,7 @@ public final class AirStrings {
       cachedETags[currentLocale] = cached.etag
     } catch {
       logger.error("Cached bundle verification failed, clearing cache")
-      store.delete(projectId: configuration.projectId, locale: currentLocale)
+      store.delete(projectId: configuration.projectId, environmentId: configuration.environmentId, locale: currentLocale)
     }
   }
 
