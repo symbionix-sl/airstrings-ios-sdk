@@ -20,14 +20,15 @@ final class BundleStore: Sendable {
     }
   }
   
-  private func directory(projectId: String, locale: String) -> URL {
+  private func directory(projectId: String, environmentId: String, locale: String) -> URL {
     baseDirectory
       .appendingPathComponent(projectId, isDirectory: true)
+      .appendingPathComponent(environmentId, isDirectory: true)
       .appendingPathComponent(locale, isDirectory: true)
   }
-  
-  func save(_ data: Data, projectId: String, locale: String, etag: String?) {
-    let dir = directory(projectId: projectId, locale: locale)
+
+  func save(_ data: Data, projectId: String, environmentId: String, locale: String, etag: String?) {
+    let dir = directory(projectId: projectId, environmentId: environmentId, locale: locale)
     do {
       try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
       try data.write(to: dir.appendingPathComponent("bundle.json"))
@@ -43,8 +44,8 @@ final class BundleStore: Sendable {
     }
   }
   
-  func load(projectId: String, locale: String) -> (data: Data, etag: String?)? {
-    let dir = directory(projectId: projectId, locale: locale)
+  func load(projectId: String, environmentId: String, locale: String) -> (data: Data, etag: String?)? {
+    let dir = directory(projectId: projectId, environmentId: environmentId, locale: locale)
     let bundleURL = dir.appendingPathComponent("bundle.json")
     
     guard let data = try? Data(contentsOf: bundleURL) else {
@@ -63,8 +64,8 @@ final class BundleStore: Sendable {
     return (data: data, etag: etag)
   }
   
-  func delete(projectId: String, locale: String) {
-    let dir = directory(projectId: projectId, locale: locale)
+  func delete(projectId: String, environmentId: String, locale: String) {
+    let dir = directory(projectId: projectId, environmentId: environmentId, locale: locale)
     try? FileManager.default.removeItem(at: dir)
   }
 }

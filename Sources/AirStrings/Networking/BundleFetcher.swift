@@ -24,11 +24,13 @@ final class BundleFetcher: @unchecked Sendable {
   }
   
   func fetch(
+    organizationId: String,
     projectId: String,
+    environmentId: String,
     locale: String,
     ifNoneMatch: String? = nil
   ) async throws -> FetchResult {
-    var endpoint = Endpoint<Data>.get("v1/\(projectId)/\(locale)/bundle.json")
+    var endpoint = Endpoint<Data>.get("\(organizationId)/\(projectId)/\(environmentId)/\(locale)/bundle.json")
     
     if let etag = ifNoneMatch {
       endpoint = endpoint.header("If-None-Match", etag)

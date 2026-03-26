@@ -19,16 +19,16 @@ final class BundleStoreTests {
 
   @Test func saveAndLoadRoundTrip() {
     let data = Data(#"{"format_version":1,"strings":{}}"#.utf8)
-    store.save(data, projectId: "proj_test12345678", locale: "en", etag: "\"rev:42\"")
+    store.save(data, projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en", etag: "\"rev:42\"")
 
-    let loaded = store.load(projectId: "proj_test12345678", locale: "en")
+    let loaded = store.load(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en")
     #expect(loaded != nil)
     #expect(loaded?.data == data)
     #expect(loaded?.etag == "\"rev:42\"")
   }
 
   @Test func loadReturnsNilWhenEmpty() {
-    let loaded = store.load(projectId: "proj_nonexistent", locale: "en")
+    let loaded = store.load(projectId: "proj_nonexistent", environmentId: "env_test12345678", locale: "en")
     #expect(loaded == nil)
   }
 
@@ -36,11 +36,11 @@ final class BundleStoreTests {
     let enData = Data(#"{"locale":"en"}"#.utf8)
     let frData = Data(#"{"locale":"fr"}"#.utf8)
 
-    store.save(enData, projectId: "proj_test12345678", locale: "en", etag: "\"en:1\"")
-    store.save(frData, projectId: "proj_test12345678", locale: "fr", etag: "\"fr:1\"")
+    store.save(enData, projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en", etag: "\"en:1\"")
+    store.save(frData, projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "fr", etag: "\"fr:1\"")
 
-    let enLoaded = store.load(projectId: "proj_test12345678", locale: "en")
-    let frLoaded = store.load(projectId: "proj_test12345678", locale: "fr")
+    let enLoaded = store.load(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en")
+    let frLoaded = store.load(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "fr")
 
     #expect(enLoaded?.data == enData)
     #expect(frLoaded?.data == frData)
@@ -50,20 +50,20 @@ final class BundleStoreTests {
 
   @Test func deleteRemovesCache() {
     let data = Data(#"{"test":true}"#.utf8)
-    store.save(data, projectId: "proj_test12345678", locale: "en", etag: nil)
+    store.save(data, projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en", etag: nil)
 
-    #expect(store.load(projectId: "proj_test12345678", locale: "en") != nil)
+    #expect(store.load(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en") != nil)
 
-    store.delete(projectId: "proj_test12345678", locale: "en")
+    store.delete(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en")
 
-    #expect(store.load(projectId: "proj_test12345678", locale: "en") == nil)
+    #expect(store.load(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en") == nil)
   }
 
   @Test func saveWithNilEtag() {
     let data = Data(#"{"test":true}"#.utf8)
-    store.save(data, projectId: "proj_test12345678", locale: "en", etag: nil)
+    store.save(data, projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en", etag: nil)
 
-    let loaded = store.load(projectId: "proj_test12345678", locale: "en")
+    let loaded = store.load(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en")
     #expect(loaded != nil)
     #expect(loaded?.data == data)
     #expect(loaded?.etag == nil)
@@ -73,25 +73,26 @@ final class BundleStoreTests {
     let data1 = Data(#"{"revision":1}"#.utf8)
     let data2 = Data(#"{"revision":2}"#.utf8)
 
-    store.save(data1, projectId: "proj_test12345678", locale: "en", etag: "\"v1\"")
-    store.save(data2, projectId: "proj_test12345678", locale: "en", etag: "\"v2\"")
+    store.save(data1, projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en", etag: "\"v1\"")
+    store.save(data2, projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en", etag: "\"v2\"")
 
-    let loaded = store.load(projectId: "proj_test12345678", locale: "en")
+    let loaded = store.load(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en")
     #expect(loaded?.data == data2)
     #expect(loaded?.etag == "\"v2\"")
   }
 
   @Test func corruptedMetadataStillReturnsData() throws {
     let data = Data(#"{"test":true}"#.utf8)
-    store.save(data, projectId: "proj_test12345678", locale: "en", etag: "\"valid\"")
+    store.save(data, projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en", etag: "\"valid\"")
 
     let metadataURL = tempDir
       .appendingPathComponent("proj_test12345678")
+      .appendingPathComponent("env_test12345678")
       .appendingPathComponent("en")
       .appendingPathComponent("metadata.json")
     try Data("corrupted".utf8).write(to: metadataURL)
 
-    let loaded = store.load(projectId: "proj_test12345678", locale: "en")
+    let loaded = store.load(projectId: "proj_test12345678", environmentId: "env_test12345678", locale: "en")
     #expect(loaded != nil)
     #expect(loaded?.data == data)
     #expect(loaded?.etag == nil)
