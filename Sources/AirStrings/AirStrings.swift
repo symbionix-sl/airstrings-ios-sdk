@@ -41,6 +41,7 @@ public final class AirStrings {
   @ObservationIgnored private let verifier: BundleVerifier
   @ObservationIgnored private let store: BundleStore
   @ObservationIgnored private var cachedETags: [String: String] = [:]
+  @ObservationIgnored private var cachedRevisions: [String: Int] = [:]
   @ObservationIgnored private var activeRefreshTask: Task<Void, Never>?
   @ObservationIgnored nonisolated(unsafe) private var foregroundObserver: (any NSObjectProtocol)?
   @ObservationIgnored private let logger = Logger(subsystem: "com.airstrings.sdk", category: "AirStrings")
@@ -137,7 +138,11 @@ public final class AirStrings {
     // until the network fetch completes. Stale translations are better
     // than flashing raw keys.
 
-    await refresh()
+    // Bypass refresh coalescing — if a refresh for the previous locale is
+    // in flight, awaiting it via refresh() would return without ever
+    // fetching the new locale. Call performRefresh() directly to guarantee
+    // the new locale is fetched.
+    await performRefresh()
   }
 
   /// Fetches the latest bundle from CDN for the current locale.
@@ -194,8 +199,9 @@ public final class AirStrings {
         }
 
         // Anti-downgrade: don't replace newer revision with older for same locale
-        if bundle.locale == currentLocale && bundle.revision < revision {
-          logger.warning("Ignoring stale bundle: rev \(bundle.revision) < current \(self.revision)")
+        let knownRevision = cachedRevisions[bundle.locale] ?? 0
+        if bundle.revision < knownRevision {
+          logger.warning("Ignoring stale bundle: rev \(bundle.revision) < current \(knownRevision) for \(bundle.locale)")
           return
         }
 
@@ -286,12 +292,7 @@ public final class AirStrings {
     stringEntries = bundle.strings
     strings = bundle.strings.mapValues { $0.value }
     revision = bundle.revision
-  }
-
-  private func clearBundle() {
-    strings = [:]
-    stringEntries = [:]
-    revision = 0
+    cachedRevisions[bundle.locale] = bundle.revision
   }
 
   private func loadCachedBundle() {
