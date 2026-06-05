@@ -14,7 +14,7 @@ Add the package to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/symbionix/airstrings-sdk-ios.git", from: "1.0.0")
+    .package(url: "https://github.com/symbionix-sl/airstrings-sdk-ios.git", from: "0.2.3")
 ]
 ```
 
@@ -28,7 +28,9 @@ Configure once at app launch:
 import AirStrings
 
 AirStrings.configure(.init(
+    organizationId: "org_a1b2c3d4e5f6",
     projectId: "proj_a1b2c3d4e5f6",
+    environmentId: "env_a1b2c3d4e5f6",
     publicKeys: ["BASE64_ENCODED_PUBLIC_KEY"]
 ))
 ```
@@ -49,7 +51,9 @@ Inject the shared instance at the root for `@Environment` access:
 struct MyApp: App {
     init() {
         AirStrings.configure(.init(
+            organizationId: "org_a1b2c3d4e5f6",
             projectId: "proj_a1b2c3d4e5f6",
+            environmentId: "env_a1b2c3d4e5f6",
             publicKeys: ["BASE64_ENCODED_PUBLIC_KEY"]
         ))
     }
@@ -113,7 +117,9 @@ The SDK uses the device locale by default. Override with a fixed locale:
 
 ```swift
 AirStrings.configure(.init(
+    organizationId: "org_a1b2c3d4e5f6",
     projectId: "proj_a1b2c3d4e5f6",
+    environmentId: "env_a1b2c3d4e5f6",
     publicKeys: ["BASE64_ENCODED_PUBLIC_KEY"],
     locale: .fixed("fr")
 ))
@@ -170,9 +176,12 @@ All paths are silent on failure — views keep showing the last known strings (o
 
 ```swift
 AirStringsConfiguration(
+    organizationId: String,        // Your AirStrings organization ID
     projectId: String,             // Your AirStrings project ID
-    publicKeys: [String],            // base64-encoded Ed25519 public keys
-    locale: AirStringsLocale       // .system (default) or .fixed("en-US")
+    environmentId: String,         // Your AirStrings environment ID
+    publicKeys: [String],          // base64-encoded Ed25519 public keys
+    locale: AirStringsLocale,      // .system (default) or .fixed("en-US")
+    apiBaseURL: URL                // defaults to https://api.airstrings.com
 )
 ```
 
@@ -200,7 +209,9 @@ Configure multiple public keys to support rotation:
 
 ```swift
 AirStrings.configure(.init(
+    organizationId: "org_a1b2c3d4e5f6",
     projectId: "proj_a1b2c3d4e5f6",
+    environmentId: "env_a1b2c3d4e5f6",
     publicKeys: [
         "OLD_KEY_BASE64",
         "NEW_KEY_BASE64"
