@@ -14,7 +14,7 @@ Add the package to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/symbionix-sl/airstrings-sdk-ios.git", from: "0.3.0")
+    .package(url: "https://github.com/symbionix-sl/airstrings-sdk-ios.git", from: "0.4.0")
 ]
 ```
 
@@ -22,12 +22,12 @@ Or in Xcode: **File > Add Package Dependencies** and enter the repository URL.
 
 ## Quick Start
 
-Configure once at app launch:
+Create an `AirStrings` instance at app launch, own it, and inject it into SwiftUI:
 
 ```swift
 import AirStrings
 
-AirStrings.configure(.init(
+let airStrings = AirStrings(configuration: .init(
     organizationId: "org_a1b2c3d4e5f6",
     projectId: "proj_a1b2c3d4e5f6",
     environmentId: "env_a1b2c3d4e5f6",
@@ -35,33 +35,30 @@ AirStrings.configure(.init(
 ))
 ```
 
-Then use `AirStrings.shared` anywhere:
+Read strings via subscript:
 
 ```swift
-// ViewModel, service, UIKit controller — anywhere on MainActor
-let title = AirStrings.shared["onboarding.welcome_title"]
+let title = airStrings["onboarding.welcome_title"]
 ```
 
 ### SwiftUI
 
-Inject the shared instance at the root for `@Environment` access:
+Own the instance with `@State` and inject it at the root for `@Environment` access:
 
 ```swift
 @main
 struct MyApp: App {
-    init() {
-        AirStrings.configure(.init(
-            organizationId: "org_a1b2c3d4e5f6",
-            projectId: "proj_a1b2c3d4e5f6",
-            environmentId: "env_a1b2c3d4e5f6",
-            publicKeys: ["BASE64_ENCODED_PUBLIC_KEY"]
-        ))
-    }
+    @State private var airStrings = AirStrings(configuration: .init(
+        organizationId: "org_a1b2c3d4e5f6",
+        projectId: "proj_a1b2c3d4e5f6",
+        environmentId: "env_a1b2c3d4e5f6",
+        publicKeys: ["BASE64_ENCODED_PUBLIC_KEY"]
+    ))
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.airStrings, .shared)
+                .environment(\.airStrings, airStrings)
         }
     }
 }
@@ -77,13 +74,17 @@ struct ContentView: View {
 
 ### ViewModels
 
-Access the shared instance directly — no injection needed:
+Pass the instance into your ViewModel:
 
 ```swift
 @MainActor
 @Observable
 final class SettingsViewModel {
-    let strings = AirStrings.shared
+    private let strings: AirStrings
+
+    init(strings: AirStrings) {
+        self.strings = strings
+    }
 
     var title: String {
         strings["settings.title"]
@@ -94,6 +95,8 @@ final class SettingsViewModel {
     }
 }
 ```
+
+Construct it from a view with the injected instance, e.g. `SettingsViewModel(strings: strings)`.
 
 ### String Formatting (ICU MessageFormat)
 
@@ -116,7 +119,7 @@ The `subscript` always returns the raw value. Use `string(_:args:)` when you nee
 The SDK uses the device locale by default. Override with a fixed locale:
 
 ```swift
-AirStrings.configure(.init(
+let airStrings = AirStrings(configuration: .init(
     organizationId: "org_a1b2c3d4e5f6",
     projectId: "proj_a1b2c3d4e5f6",
     environmentId: "env_a1b2c3d4e5f6",
@@ -128,7 +131,7 @@ AirStrings.configure(.init(
 Switch locale at runtime:
 
 ```swift
-await AirStrings.shared.setLocale("es")
+await airStrings.setLocale("es")
 ```
 
 ## Bundled fallback (offline-safe builds)
@@ -156,7 +159,7 @@ The SDK does not probe the bundle root — a flattened layout is treated as abse
 Seeding is zero-config when the seed directory is present, and fully optional:
 
 ```swift
-AirStrings.configure(.init(
+let airStrings = AirStrings(configuration: .init(
     organizationId: "org_a1b2c3d4e5f6",
     projectId: "proj_a1b2c3d4e5f6",
     environmentId: "env_a1b2c3d4e5f6",
@@ -177,7 +180,7 @@ Full specification: [bundled fallback contract](https://github.com/symbionix-sl/
 
 `AirStrings` is `@Observable`. SwiftUI views that read `strings`, `currentLocale`, `isReady`, or `revision` automatically re-render when those values change — no Combine, no manual subscriptions.
 
-This works transitively through ViewModels: if an `@Observable` ViewModel reads `AirStrings.shared["key"]` in a computed property, SwiftUI tracks that dependency and re-renders when the strings update.
+This works transitively through ViewModels: if an `@Observable` ViewModel reads `strings["key"]` from its injected `AirStrings` instance in a computed property, SwiftUI tracks that dependency and re-renders when the strings update.
 
 Strings update automatically on:
 - **Init** — loads cache immediately, then fetches from CDN in the background
@@ -203,8 +206,7 @@ All paths are silent on failure — views keep showing the last known strings (o
 
 | Member | Type | Description |
 |--------|------|-------------|
-| `configure(_:)` | `static` | Configures the shared instance (call once at launch) |
-| `shared` | `static` | The shared instance, available after `configure(_:)` |
+| `init(configuration:)` | — | Creates an instance; loads cache and fetches in the background |
 | `subscript[key]` | `String` | Returns localized string or key name as fallback |
 | `string(_:args:)` | `String` | Formats ICU MessageFormat patterns with arguments |
 | `isReady` | `Bool` | `true` after first bundle loads (cache or network) |
@@ -255,7 +257,7 @@ AirStringsConfiguration(
 Configure multiple public keys to support rotation:
 
 ```swift
-AirStrings.configure(.init(
+let airStrings = AirStrings(configuration: .init(
     organizationId: "org_a1b2c3d4e5f6",
     projectId: "proj_a1b2c3d4e5f6",
     environmentId: "env_a1b2c3d4e5f6",

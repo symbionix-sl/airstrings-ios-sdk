@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-11
+
+### Changed
+
+- **BREAKING:** Removed the `AirStrings` singleton. The integrating app now constructs and owns the instance via `AirStrings(configuration:)` and injects it into SwiftUI with `.environment(\.airStrings, instance)`. This aligns the iOS SDK with the Android and Web SDKs, which have no singleton.
+
+### Removed
+
+- **BREAKING:** `AirStrings.shared` static property and `AirStrings.configure(_:)` static method. Replace `AirStrings.configure(.init(...))` + `AirStrings.shared` with a single owned instance: `let airStrings = AirStrings(configuration: .init(...))`, injected via `.environment(\.airStrings, airStrings)`.
+
 ## [0.3.0] - 2026-06-10
 
 ### Added
