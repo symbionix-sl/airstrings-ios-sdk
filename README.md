@@ -280,6 +280,10 @@ The SDK selects the correct key using the `key_id` in each bundle. Remove old ke
 - Public keys are provided at init — never hardcoded, logged, or embedded by the SDK
 - Uses Apple CryptoKit — no custom cryptography
 
+## Links
+
+- **Website:** https://airstrings.com
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
